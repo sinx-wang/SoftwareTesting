@@ -5,6 +5,7 @@ from tensorflow import keras
 
 import numpy as np
 import matplotlib.pyplot as plt
+import cnn_model
 
 
 def train():
@@ -42,5 +43,48 @@ def train():
     test_loss, test_acc = model.evaluate(test_images, test_labels)
     print('Test accuracy: ', test_acc)
 
-def aiTest(x_test, input_shape):
 
+def aiTest1(x_test, input_shape):
+    batch_size = 64
+    pic_num, width, height = input_shape[0], input_shape[1], input_shape[2]
+    mnist_dim = width * height
+    random_dim = 10
+    epochs = 10
+
+    def random_init(size):
+        return tf.random_uniform(size, -0.05, 0.05)
+
+
+def aiTest(x_test: list, input_shape: tuple):
+    new_images = []
+    model = cnn_model.load_model()
+    model_input_layer = model.layers[0].input
+    model_output_layer = model.layers[-1].output
+    batch = 0
+
+    for image in x_test:
+        image = np.expand_dims(image, 0)
+        hacked_image = np.copy(image)
+
+        error_tag = np.argmax(model.predict(image)[0])
+        error_tag -= 1
+        if error_tag == -1:
+            error_tag = 9
+
+        cost_func = model_output_layer[0, error_tag]
+        gradient_func = keras.backend.gradients(cost_func, model_input_layer)[0]
+        grab_cost_and_gradients_from_model = keras.backend.function([model_input_layer, keras.backend.learning_phase()],
+                                                                    [cost_func, gradient_func])
+
+        e = 0.007
+        cost = 0
+        while cost < 0.6:
+            cost, gradients = grab_cost_and_gradients_from_model([hacked_image, 0])
+            n = np.sign(gradients)
+            hacked_image += n * e
+            hacked_image = np.clip(hacked_image, -1, 1)
+
+        new_images.append(hacked_image[0])
+        print("batch:{} cost:{:.5}%".format(batch, cost * 100))
+        batch += 1
+    return new_images

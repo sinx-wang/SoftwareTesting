@@ -5,15 +5,15 @@ import tensorflow as tf
 from keras import backend as K
 from main import aiTest
 from skimage.measure import compare_ssim as ssim
-from basicModel import Model
+# from basicModel import Model
 from cnn_model import load_model
 
 img_rows, img_cols = 28, 28
 num_classes = 10
 
-import fashion.mnist_reader as reader
-x_train, y_train = reader.load_mnist('fashion', kind='train')
-x_test, y_test = reader.load_mnist('fashion', kind='t10k')
+import fashion.utils.mnist_reader as reader
+x_train, y_train = reader.load_mnist('fashion\\data\\fashion', kind='train')
+x_test, y_test = reader.load_mnist('fashion\\data\\fashion', kind='t10k')
 # fashion_mnist = keras.datasets.fashion_mnist
 # (x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
 
@@ -53,7 +53,7 @@ loaded_model = load_model()
 test_pic_num = 100
 x_test = x_test[:test_pic_num]
 y_test = y_test[:test_pic_num]
-attack_sample = aiTest(x_test, (28, 28, 1))
+attack_sample = aiTest(x_test, (test_pic_num, 28, 28, 1))
 count = 0.0
 s = 0.0
 for i in range(0, test_pic_num):
@@ -66,7 +66,7 @@ for i in range(0, test_pic_num):
     wrong_class = np.argmax(loaded_model.predict(attack_img)[0])
     # wrong_class=np.argmax(l_model.predict(origin_img)[0])
     # print("wrong: ", wrong_class)
-    s += ssim(origin_img[0,:,:,0], attack_img[0,:,:,0], multichannel=True) / test_pic_num
+    s += ssim(origin_img[0, :, :, 0], attack_img[0, :, :, 0], multichannel=True) / test_pic_num
     # s += ssim(origin_img[0], attack_img[0], multichannel=True) / test_pic_num
     if actual_class != wrong_class:
         count += 1
